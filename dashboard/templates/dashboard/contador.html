@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Contadores</title>
+  <script src="https://unpkg.com/aws-amplify@4.3.24/dist/aws-amplify.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #2c3e50;
+    }
+
+    .contador {
+      background-color: white;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin: 10px auto;
+      max-width: 600px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      font-size: 1.1em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .contador span {
+      font-weight: bold;
+      color: #27ae60;
+    }
+
+    .icono {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dashboard de Contadores</h1>
+  <div id="contenedor"></div>
+
+  <script>
+    const { Amplify, API, graphqlOperation } = window.aws_amplify;
+
+    Amplify.configure({
+      aws_appsync_graphqlEndpoint: 'https://ssl27pq6rzboteiin5ekouvtsa.appsync-api.us-east-1.amazonaws.com/graphql',
+      aws_appsync_region: 'us-east-1',
+      aws_appsync_authenticationType: 'API_KEY',
+      aws_appsync_apiKey: 'da2-mijdhube7ffn3kruybhhs43tha',
+      aws_appsync_dangerously_connect_to_http_endpoint_for_testing: false
+    });
+
+    const contenedor = document.getElementById('contenedor');
+
+    const listarContadoresQuery = `
+      query {
+        listContadores {
+          dispositivo
+          total
+          ultima_actualizacion
+        }
+      }
+    `;
+
+    API.graphql(graphqlOperation(listarContadoresQuery)).then(result => {
+      const lista = result.data.listContadores;
+      lista.forEach(renderContador);
+      console.log("📋 Contadores iniciales mostrados.");
+    }).catch(error => {
+      console.error("❌ Error al obtener contadores iniciales:", error);
+    });
+
+    const subscriptionQuery = `
+      subscription contadorUpdated($dispositivo: String) {
+        contadorUpdated(dispositivo: $dispositivo) {
+          dispositivo
+          total
+          ultima_actualizacion
+        }
+      }
+    `;
+
+    console.log("📡 Intentando conexión WebSocket con AppSync...");
+    let socketActivo = false;
+
+    const suscripcion = API.graphql(graphqlOperation(subscriptionQuery, { dispositivo: undefined }));
+
+    suscripcion.subscribe({
+      next: ({ value }) => {
+        socketActivo = true;
+        console.log("🔗 WebSocket conectado correctamente");
+        const contador = value.data.contadorUpdated;
+        renderContador(contador);
+        console.log("✅ Actualización recibida:", contador);
+      },
+      error: (err) => {
+        console.error("❌ Error en suscripción:", err);
+      }
+    });
+
+    setTimeout(() => {
+      if (!socketActivo) {
+        console.log("🟡 Conexión WebSocket activa y esperando datos...");
+      }
+    }, 5000);
+
+    function renderContador(contador) {
+      let existente = document.getElementById(contador.dispositivo);
+      const contenido = `💡 <strong>${contador.dispositivo}</strong> — 
+        <span>Total: ${contador.total}</span> — 
+        <small>${contador.ultima_actualizacion}</small>`;
+
+      if (existente) {
+        existente.innerHTML = contenido;
+      } else {
+        const div = document.createElement('div');
+        div.className = 'contador';
+        div.id = contador.dispositivo;
+        div.innerHTML = contenido;
+        contenedor.prepend(div);
+      }
+    }
+  </script>
+</body>
+</html>
