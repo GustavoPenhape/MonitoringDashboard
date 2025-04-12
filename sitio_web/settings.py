@@ -28,7 +28,9 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1',
-    '81c6-45-231-80-108.ngrok-free.app'
+    '81c6-45-231-80-108.ngrok-free.app',
+    '44.207.5.84',
+    'monitoringdashboard.duckdns.org'
 ]
 
 
