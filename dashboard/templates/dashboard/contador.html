@@ -41,7 +41,13 @@
     }
   </style>
 </head>
+
 <body>
+  <div style="text-align: right;">
+    Sesión iniciada como: <strong>{{ user_info.email }}</strong>
+    <a href="{% url 'logout' %}">Cerrar sesión</a>
+  </div>
+  
   <h1>Dashboard de Contadores</h1>
   <div id="contenedor"></div>
 
@@ -52,7 +58,7 @@
       aws_appsync_graphqlEndpoint: 'https://ssl27pq6rzboteiin5ekouvtsa.appsync-api.us-east-1.amazonaws.com/graphql',
       aws_appsync_region: 'us-east-1',
       aws_appsync_authenticationType: 'API_KEY',
-      aws_appsync_apiKey: 'da2-jkobiwwesngcxk5fe2bmzb5j2m',
+      aws_appsync_apiKey: 'da2-jkl7ptxdgberhjl67k3riecgkq',
       aws_appsync_dangerously_connect_to_http_endpoint_for_testing: false
     });
 

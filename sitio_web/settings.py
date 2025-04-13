@@ -23,7 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-1c*s77)xkemu*6lxl9ks*s0q0#=mw&lfs#t$ty$&23h5_c_xz7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
+# True pruebas en local
+# False pruebas en ec2
 
 ALLOWED_HOSTS = [
     'localhost', 
@@ -135,3 +137,7 @@ LOGIN_URL = '/login/'
 
 CSRF_FAILURE_VIEW = 'dashboard.views.csrf_error_view'
 
+if DEBUG:
+    REDIRECT_URI = "http://localhost:8000/authorize"
+else:
+    REDIRECT_URI = "https://44.207.5.84/authorize"
