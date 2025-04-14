@@ -53,13 +53,21 @@ def authorize_view(request):
         algorithms=['RS256']
     )
 
-    # Guardar datos mínimos en sesión
+    # Guardar datos en sesión
     request.session['user'] = {
         "email": userinfo.get("email"),
-        "sub": userinfo.get("sub")
+        "sub": userinfo.get("sub"),
+        "groups": userinfo.get("cognito:groups", [])
     }
 
-    return redirect('ver_dashboard')
+    # Redirigir según grupo
+    groups = userinfo.get("cognito:groups", [])
+    if "admin" in groups:
+        return redirect('ver_dashboard')
+    elif "users" in groups:
+        return redirect('dashboard_usuario')
+    else:
+        return redirect('login')  # o una vista de acceso denegado
 
 
 def logout_view(request):
