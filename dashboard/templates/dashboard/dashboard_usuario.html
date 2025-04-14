@@ -1,1 +1,29 @@
-<h1>Bienvenido usuario 👤</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Usuario</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 40px;
+        }
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .icono {
+            margin-left: 8px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        Sesión iniciada como: {{ user_info.email }}
+        <a href="{% url 'logout' %}" class="icono">🔒 Cerrar sesión</a>
+    </div>
+
+    <h1>Bienvenido usuario 👤</h1>
+</body>
+</html>
