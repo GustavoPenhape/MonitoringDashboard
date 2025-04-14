@@ -8,18 +8,37 @@ from authlib.integrations.requests_client import OAuth2Session
 import requests
 import jwt
 
-# Configuración de Cognito
+# === Configuración de Cognito ===
 CLIENT_ID = '1d06unmfrnjnsp6bv43a71db2g'
 CLIENT_SECRET = '1iopej75sheeh91i0tdq0g2f11o190qubpniinfck2jv7mbu010q'
 ISSUER = 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_B89KEuVRr'
 AUTHORIZATION_ENDPOINT = f'{ISSUER}/.well-known/openid-configuration'
 
-# Cargar metadata de Cognito
+# Cargar metadata
 config = requests.get(AUTHORIZATION_ENDPOINT).json()
 authorize_url = config["authorization_endpoint"]
 token_url = config["token_endpoint"]
 userinfo_url = config["userinfo_endpoint"]
 jwks_uri = config["jwks_uri"]
+
+# === Decoradores personalizados ===
+
+def login_required_custom(view_func):
+    def wrapper(request, *args, **kwargs):
+        if 'user' not in request.session:
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+def group_required(required_group):
+    def decorator(view_func):
+        def wrapper(request, *args, **kwargs):
+            user = request.session.get('user')
+            if not user or required_group not in user.get("groups", []):
+                return HttpResponseForbidden("Acceso denegado.")
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
 
 # === Vistas ===
 
@@ -28,7 +47,6 @@ def login_view(request):
     session = OAuth2Session(CLIENT_ID, CLIENT_SECRET, scope='openid email', redirect_uri=redirect_uri)
     uri, _ = session.create_authorization_url(authorize_url)
     return redirect(uri)
-
 
 def authorize_view(request):
     code = request.GET.get('code')
@@ -67,8 +85,7 @@ def authorize_view(request):
     elif "users" in groups:
         return redirect('dashboard_usuario')
     else:
-        return redirect('login')  # o una vista de acceso denegado
-
+        return redirect('login')  # o página de error personalizada
 
 def logout_view(request):
     request.session.flush()
@@ -79,25 +96,19 @@ def logout_view(request):
     )
     return redirect(logout_uri)
 
-
-def login_required_custom(view_func):
-    def wrapper(request, *args, **kwargs):
-        if 'user' not in request.session:
-            return redirect('login')
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
+# === Vistas protegidas ===
 
 @login_required_custom
+@group_required("admin")
 def ver_dashboard(request):
     user_info = request.session.get('user')
     return render(request, 'dashboard/contador.html', {'user_info': user_info})
 
-
 @login_required_custom
+@group_required("users")
 def dashboard_usuario(request):
-    return render(request, 'dashboard/dashboard_usuario.html')
-
+    user_info = request.session.get('user')
+    return render(request, 'dashboard/dashboard_usuario.html', {'user_info': user_info})
 
 def csrf_error_view(request, reason=""):
     template = loader.get_template('403.html')
