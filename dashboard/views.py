@@ -71,14 +71,16 @@ def authorize_view(request):
         algorithms=['RS256']
     )
 
-    print("📩 Email:", userinfo.get("email"))
-    print("🛡️ Grupos desde Cognito:", userinfo.get("cognito:groups", []))
+    print("👤 Usuario:", userinfo.get("email"))
+    print("🔐 Grupos del token:", userinfo.get("cognito:groups", []))  # DEBUG
 
+    # ✅ Guardar grupos correctamente en sesión
     request.session['user'] = {
         "email": userinfo.get("email"),
         "sub": userinfo.get("sub"),
-        "groups": userinfo.get("cognito:groups", [])
+        "groups": userinfo.get("cognito:groups", [])  # <-- esto es clave
     }
+
     # Redirigir según grupo
     groups = userinfo.get("cognito:groups", [])
     if "admin" in groups:
@@ -86,7 +88,7 @@ def authorize_view(request):
     elif "users" in groups:
         return redirect('dashboard_usuario')
     else:
-        return redirect('login')  # o página de error personalizada
+        return redirect('login')
 
 def logout_view(request):
     request.session.flush()
