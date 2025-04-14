@@ -71,13 +71,14 @@ def authorize_view(request):
         algorithms=['RS256']
     )
 
-    # Guardar datos en sesión
+    print("📩 Email:", userinfo.get("email"))
+    print("🛡️ Grupos desde Cognito:", userinfo.get("cognito:groups", []))
+
     request.session['user'] = {
         "email": userinfo.get("email"),
         "sub": userinfo.get("sub"),
         "groups": userinfo.get("cognito:groups", [])
     }
-
     # Redirigir según grupo
     groups = userinfo.get("cognito:groups", [])
     if "admin" in groups:
