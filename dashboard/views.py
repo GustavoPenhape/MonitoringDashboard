@@ -39,15 +39,13 @@ def group_required(required_group):
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
             user = request.session.get('user')
-            logger.info(f"🧠 Grupo requerido: {required_group}")
-            logger.info(f"🔐 Usuario en sesión: {user}")
+            print("🧪 Usuario actual:", user)  # <- agrega esto temporalmente
             if not user or required_group not in user.get("groups", []):
-                logger.warning("❌ Acceso denegado por grupo.")
+                print("🚫 Grupo no autorizado:", user.get("groups", []))
                 return HttpResponseForbidden("Acceso denegado.")
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
-
 
 @login_required_custom
 def redireccion_por_grupo(request):
