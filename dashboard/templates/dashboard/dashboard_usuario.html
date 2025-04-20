@@ -24,12 +24,9 @@
         {% endif %}
 
         <!-- Botón Validar asistencia -->
-        <form action="{% url 'validar_asistencia' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-success btn-lg">
-                ✅ Validar asistencia
-            </button>
-        </form>
+        <a href="{% url 'validar_asistencia' %}" class="btn btn-success btn-lg">
+            ✅ Validar asistencia
+        </a>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
