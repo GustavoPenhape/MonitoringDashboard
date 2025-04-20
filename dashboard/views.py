@@ -4,6 +4,9 @@ from django.template import loader
 from django.conf import settings
 from django.urls import reverse
 from django.contrib import messages
+import logging
+logger = logging.getLogger(__name__)
+
 
 from authlib.integrations.requests_client import OAuth2Session
 import requests
@@ -36,11 +39,15 @@ def group_required(required_group):
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
             user = request.session.get('user')
+            logger.info(f"🧠 Grupo requerido: {required_group}")
+            logger.info(f"🔐 Usuario en sesión: {user}")
             if not user or required_group not in user.get("groups", []):
+                logger.warning("❌ Acceso denegado por grupo.")
                 return HttpResponseForbidden("Acceso denegado.")
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
+
 
 @login_required_custom
 def redireccion_por_grupo(request):
