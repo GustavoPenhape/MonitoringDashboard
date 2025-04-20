@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.template import loader
 from django.conf import settings
 from django.urls import reverse
+from django.contrib import messages
 
 from authlib.integrations.requests_client import OAuth2Session
 import requests
@@ -40,6 +41,18 @@ def group_required(required_group):
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
+
+@login_required_custom
+def redireccion_por_grupo(request):
+    user = request.session.get('user')
+    grupos = user.get("groups", [])
+
+    if "admin" in grupos:
+        return redirect('ver_dashboard')
+    elif "users" in grupos:
+        return redirect('dashboard_usuario')
+    else:
+        return HttpResponseForbidden("No tienes un grupo válido.")
 
 # === Vistas ===
 
@@ -110,6 +123,32 @@ def logout_view(request):
         f"&logout_uri={settings.REDIRECT_URI}"
     )
     return redirect(logout_uri)
+
+@login_required_custom
+@group_required("users")
+def validar_asistencia(request):
+    if request.method == 'POST':
+        dni = request.POST.get('dni')
+        if not dni:
+            messages.error(request, "⚠️ Debes ingresar un DNI.")
+            return redirect('validar_asistencia')
+
+        # Buscar en DynamoDB
+        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')  # cambia la región si es necesario
+        tabla = dynamodb.Table('NombreDeTuTabla')  # reemplaza con tu nombre real
+
+        try:
+            response = tabla.get_item(Key={'dni': dni})
+            if 'Item' in response:
+                messages.success(request, f"✅ Asistencia validada para {dni}.")
+            else:
+                messages.error(request, f"❌ DNI {dni} no encontrado.")
+        except Exception as e:
+            messages.error(request, f"❌ Error consultando la base: {str(e)}")
+
+        return redirect('validar_asistencia')
+
+    return render(request, 'dashboard/validar_asistencia_form.html')
 
 # === Vistas protegidas ===
 
