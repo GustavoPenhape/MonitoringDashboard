@@ -55,41 +55,52 @@ def authorize_view(request):
 
     redirect_uri = settings.REDIRECT_URI
     session = OAuth2Session(CLIENT_ID, CLIENT_SECRET, scope='openid email', redirect_uri=redirect_uri)
-    token = session.fetch_token(token_url, code=code)
-    id_token = token.get('id_token')
-
-    # Validar y decodificar token
-    jwks = requests.get(jwks_uri).json()
-    kid = jwt.get_unverified_header(id_token)['kid']
-    key = next(k for k in jwks['keys'] if k['kid'] == kid)
-
-    userinfo = jwt.decode(
-        id_token,
-        key=jwt.algorithms.RSAAlgorithm.from_jwk(key),
-        audience=CLIENT_ID,
-        issuer=ISSUER,
-        algorithms=['RS256']
-    )
-
-    print("👤 Usuario:", userinfo.get("email"))
-    print("🔐 Grupos del token:", userinfo.get("cognito:groups", []))  # DEBUG
-
-    # ✅ Guardar grupos correctamente en sesión
-    request.session['user'] = {
-        "email": userinfo.get("email"),
-        "sub": userinfo.get("sub"),
-        "groups": userinfo.get("cognito:groups", [])  # <-- esto es clave
-    }
-
-    # Redirigir según grupo
-    groups = userinfo.get("cognito:groups", [])
-    if "admin" in groups:
-        return redirect('ver_dashboard')
-    elif "users" in groups:
-        return redirect('dashboard_usuario')
-    else:
+    
+    try:
+        token = session.fetch_token(token_url, code=code)
+        id_token = token.get('id_token')
+    except Exception as e:
+        print("❌ Error al obtener el token:", str(e))
         return redirect('login')
 
+    try:
+        # Obtener la clave pública (JWKS) de Cognito
+        jwks = requests.get(jwks_uri).json()
+        kid = jwt.get_unverified_header(id_token)['kid']
+        key = next(k for k in jwks['keys'] if k['kid'] == kid)
+
+        # Decodificar y verificar el token
+        userinfo = jwt.decode(
+            id_token,
+            key=jwt.algorithms.RSAAlgorithm.from_jwk(key),
+            audience=CLIENT_ID,
+            issuer=ISSUER,
+            algorithms=['RS256']
+        )
+
+        print("👤 Usuario:", userinfo.get("email"))
+        print("🔐 Grupos del token:", userinfo.get("cognito:groups", []))
+
+        # ✅ Guardar token y usuario en sesión
+        request.session['id_token'] = id_token
+        request.session['user'] = {
+            "email": userinfo.get("email"),
+            "sub": userinfo.get("sub"),
+            "groups": userinfo.get("cognito:groups", [])
+        }
+
+        # 🔀 Redirigir según grupo
+        groups = userinfo.get("cognito:groups", [])
+        if "admin" in groups:
+            return redirect('ver_dashboard')
+        elif "users" in groups:
+            return redirect('dashboard_usuario')
+        else:
+            return redirect('login')
+
+    except Exception as e:
+        print("❌ Error al validar token:", str(e))
+        return redirect('login')
 def logout_view(request):
     request.session.flush()
     logout_uri = (
