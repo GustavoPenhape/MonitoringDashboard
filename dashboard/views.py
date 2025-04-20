@@ -26,6 +26,7 @@ jwks_uri = config["jwks_uri"]
 def login_required_custom(view_func):
     def wrapper(request, *args, **kwargs):
         if 'user' not in request.session:
+            print("❌ Usuario no autenticado. Redirigiendo a login.")
             return redirect('login')
         return view_func(request, *args, **kwargs)
     return wrapper
@@ -116,6 +117,8 @@ def logout_view(request):
 @group_required("admin")
 def ver_dashboard(request):
     user_info = request.session.get('user')
+    if not user_info:
+        return redirect('login')  # seguridad doble por si acaso
     return render(request, 'dashboard/contador.html', {'user_info': user_info})
 
 @login_required_custom
