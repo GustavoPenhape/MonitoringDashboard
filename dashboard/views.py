@@ -172,6 +172,23 @@ def ver_tabla_dynamo(request):
 
     return render(request, 'dashboard/ver_tabla_dynamo.html', {'items': items})
 
+@login_required_custom
+@group_required("users")
+def ver_usuarios_activos(request):
+    import boto3
+    from boto3.dynamodb.conditions import Attr
+
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+    tabla = dynamodb.Table('HistorialAsociaciones')
+
+    response = tabla.scan(
+        FilterExpression=Attr("fecha_devolucion").not_exists()
+    )
+
+    items = response.get("Items", [])
+
+    return render(request, "dashboard/usuarios_activos.html", {"items": items})
+
 # === Vistas protegidas ===
 
 @login_required_custom
