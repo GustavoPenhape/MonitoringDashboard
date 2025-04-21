@@ -132,6 +132,7 @@ def logout_view(request):
 @login_required_custom
 @group_required("users")
 def validar_asistencia(request):
+    import boto3
     if request.method == 'POST':
         dni = request.POST.get('dni')
         if not dni:
@@ -154,6 +155,22 @@ def validar_asistencia(request):
         return redirect('validar_asistencia')
 
     return render(request, 'dashboard/validar_asistencia_form.html')
+@login_required_custom
+@group_required("users")
+def ver_dynamo(request):
+    import boto3
+
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+    tabla = dynamodb.Table('LecturasRFID')  # 🔁 Reemplaza por el nombre real
+
+    try:
+        response = tabla.scan()
+        items = response.get('Items', [])
+    except Exception as e:
+        items = []
+        messages.error(request, f"❌ Error al obtener datos de DynamoDB: {str(e)}")
+
+    return render(request, 'dashboard/ver_tabla_dynamo.html', {'items': items})
 
 # === Vistas protegidas ===
 
