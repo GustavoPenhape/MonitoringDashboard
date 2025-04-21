@@ -66,8 +66,8 @@
                 alert('Por favor ingresa un ID de lector.');
                 return;
             }
-
-            fetch('/desvincular-rfid/', {
+            
+            fetch('/usuario/desvincular-rfid/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
