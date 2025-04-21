@@ -9,6 +9,7 @@ urlpatterns = [
     path("login/", login_view, name="login"),
     path("authorize/", authorize_view, name="authorize"),
     path("logout/", logout_view, name="logout"),
+    path("admin/", ver_dashboard, name="ver_dashboard"),
     path("", redireccion_por_grupo, name="inicio"),
     path("usuario/", dashboard_usuario, name="dashboard_usuario"),
     path("usuario/validar-asistencia/", validar_asistencia, name="validar_asistencia"),
