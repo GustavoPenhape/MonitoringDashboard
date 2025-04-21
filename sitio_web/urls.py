@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from dashboard.views import login_view, authorize_view, logout_view, ver_dashboard, dashboard_usuario, validar_asistencia, redireccion_por_grupo
+from dashboard.views import login_view, authorize_view, logout_view, ver_dashboard, dashboard_usuario, validar_asistencia, redireccion_por_grupo, ver_tabla_dynamo
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -12,6 +12,7 @@ urlpatterns = [
     path("", redireccion_por_grupo, name="inicio"),
     path("usuario/", dashboard_usuario, name="dashboard_usuario"),
     path("usuario/validar-asistencia/", validar_asistencia, name="validar_asistencia"),
+    path("usuario/ver-dynamo/", ver_tabla_dynamo, name="ver_dynamo")
 
 ]
 # 👇 Esto permite servir archivos estáticos cuando DEBUG = False
