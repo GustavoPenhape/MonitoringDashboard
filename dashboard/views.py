@@ -181,8 +181,16 @@ def ver_usuarios_activos(request):
     dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
     tabla = dynamodb.Table('HistorialAsociaciones')
 
-    response = tabla.scan()
-    items = response.get("Items", [])
+    try:
+        response = tabla.scan()
+        all_items = response.get("Items", [])
+
+        # Filtrar: solo aquellos sin fecha_devolucion (es decir, tarjeta aún activa)
+        items = [item for item in all_items if "fecha_devolucion" not in item or not item["fecha_devolucion"]]
+
+    except Exception as e:
+        items = []
+        messages.error(request, f"❌ Error al consultar DynamoDB: {str(e)}")
 
     return render(request, "dashboard/usuarios_activos.html", {"items": items})
 
