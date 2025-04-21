@@ -20,6 +20,7 @@
                             <th>Correo</th>
                             <th>ID Tarjeta</th>
                             <th>Asignado desde</th>
+                            <th>Estado</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -30,6 +31,13 @@
                             <td>{{ item.correo }}</td>
                             <td>{{ item.id_tarjeta }}</td>
                             <td>{{ item.fecha_asignacion }}</td>
+                            <td>
+                                {% if not item.fecha_devolucion %}
+                                    <span class="badge bg-success">🟢 Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">⚪ Offline</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
