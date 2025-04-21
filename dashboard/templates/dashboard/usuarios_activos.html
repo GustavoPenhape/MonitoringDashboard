@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuarios activos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">👥 Usuarios activos</h2>
+
+        {% if items %}
+            <div class="table-responsive">
+                <table id="tabla-usuarios" class="table table-bordered table-hover bg-white">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>DNI</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>ID Tarjeta</th>
+                            <th>Asignado desde</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.dni }}</td>
+                            <td>{{ item.nombre }}</td>
+                            <td>{{ item.correo }}</td>
+                            <td>{{ item.id_tarjeta }}</td>
+                            <td>{{ item.fecha_asignacion }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-warning text-center">
+                No hay usuarios activos en este momento.
+            </div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard_usuario' %}" class="btn btn-secondary">⬅ Volver</a>
+        </div>
+    </div>
+
+    <!-- JS de Bootstrap y DataTables -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#tabla-usuarios').DataTable({
+                language: {
+                    lengthMenu: "Mostrar _MENU_ registros por página",
+                    zeroRecords: "No se encontraron resultados",
+                    info: "Mostrando página _PAGE_ de _PAGES_",
+                    infoEmpty: "No hay registros disponibles",
+                    infoFiltered: "(filtrado de _MAX_ registros totales)",
+                    search: "Buscar:",
+                    paginate: {
+                        previous: "Anterior",
+                        next: "Siguiente"
+                    }
+                },
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50, 100]
+            });
+        });
+    </script>
+</body>
+</html>

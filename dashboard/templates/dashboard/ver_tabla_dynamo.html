@@ -4,33 +4,63 @@
     <meta charset="UTF-8">
     <title>Tabla Dynamo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 </head>
 <body class="bg-light">
 <div class="container mt-5">
     <h2 class="text-center mb-4">📊 Datos de la tabla DynamoDB</h2>
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                {% for key in items.0.keys %}
-                    <th>{{ key }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
+    <div class="table-responsive">
+        <table id="tabla-dynamo" class="table table-bordered table-striped">
+            <thead class="table-dark">
                 <tr>
-                    {% for value in item.values %}
-                        <td>{{ value }}</td>
+                    {% for key in items.0.keys %}
+                        <th>{{ key }}</th>
                     {% endfor %}
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        {% for value in item.values %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <div class="text-center">
+    <div class="text-center mt-4">
         <a href="{% url 'dashboard_usuario' %}" class="btn btn-secondary">🔙 Volver al dashboard</a>
     </div>
 </div>
+
+<!-- JS para DataTables y Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#tabla-dynamo').DataTable({
+            language: {
+                lengthMenu: "Mostrar _MENU_ registros por página",
+                zeroRecords: "No se encontraron datos",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                infoEmpty: "No hay registros disponibles",
+                infoFiltered: "(filtrado de _MAX_ registros)",
+                search: "Buscar:",
+                paginate: {
+                    previous: "Anterior",
+                    next: "Siguiente"
+                }
+            },
+            pageLength: 10,
+            lengthMenu: [10, 20, 50, 100]
+        });
+    });
+</script>
 </body>
 </html>
