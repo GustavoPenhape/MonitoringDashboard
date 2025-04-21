@@ -157,7 +157,7 @@ def validar_asistencia(request):
     return render(request, 'dashboard/validar_asistencia_form.html')
 @login_required_custom
 @group_required("users")
-def ver_dynamo(request):
+def ver_tabla_dynamo(request):
     import boto3
 
     dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
