@@ -66,14 +66,14 @@
                 alert('Por favor ingresa un ID de lector.');
                 return;
             }
-            
+
             fetch('/usuario/desvincular-rfid/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ id_lector: lectorId })
+                body: JSON.stringify({ id_tarjeta: lectorId })
             })
             .then(response => {
                 if (response.ok) {
