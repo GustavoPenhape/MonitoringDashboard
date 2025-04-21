@@ -34,8 +34,61 @@
             <a href="{% url 'ver_usuarios_activos' %}" class="btn btn-warning btn-lg">
                 👥 Usuarios activos
             </a>
+
+            <!-- Botón que muestra el formulario -->
+            <button onclick="mostrarFormulario()" class="btn btn-danger btn-lg">
+                🔄 Desvincular RFID
+            </button>
+        </div>
+
+        <!-- Formulario oculto inicialmente -->
+        <div id="formularioDesvincular" class="col-6 mx-auto mt-4" style="display: none;">
+            <div class="card p-4 shadow-sm">
+                <h5 class="mb-3">Ingrese el ID del lector RFID:</h5>
+                <input type="text" id="input-lector-id" class="form-control mb-3" placeholder="ID del lector">
+                <button onclick="desvincularRFID()" class="btn btn-outline-danger w-100">
+                    Enviar
+                </button>
+            </div>
         </div>
     </div>
+
+    <script>
+        function mostrarFormulario() {
+            const form = document.getElementById('formularioDesvincular');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function desvincularRFID() {
+            const lectorId = document.getElementById('input-lector-id').value;
+
+            if (!lectorId) {
+                alert('Por favor ingresa un ID de lector.');
+                return;
+            }
+
+            fetch('/desvincular-rfid/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ id_lector: lectorId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('RFID desvinculado correctamente.');
+                    location.reload();
+                } else {
+                    alert('Error al desvincular RFID.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error en la solicitud.');
+            });
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

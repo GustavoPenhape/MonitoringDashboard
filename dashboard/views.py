@@ -4,7 +4,14 @@ from django.template import loader
 from django.conf import settings
 from django.urls import reverse
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from boto3.dynamodb.conditions import Key
+from datetime import datetime
+import json
 import logging
+import boto3
 logger = logging.getLogger(__name__)
 
 
@@ -194,6 +201,84 @@ def ver_usuarios_activos(request):
 
     return render(request, "dashboard/usuarios_activos.html", {"items": items})
 
+@csrf_exempt
+def desvincular_rfid(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    data = json.loads(request.body)
+    id_tarjeta = data.get('id_tarjeta')
+
+    if not id_tarjeta:
+        return JsonResponse({'error': 'Falta id_tarjeta'}, status=400)
+
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+    tabla = dynamodb.Table('HistorialAsociaciones')
+
+    try:
+        response = tabla.query(
+            KeyConditionExpression=Key('id_tarjeta').eq(id_tarjeta)
+        )
+    except Exception as e:
+        return JsonResponse({'error': f'Error al consultar DynamoDB: {str(e)}'}, status=500)
+
+    registros = response.get('Items', [])
+
+    if not registros:
+        return JsonResponse({'error': 'La tarjeta no existe en el sistema'}, status=404)
+
+    # Buscar el uso activo (sin fecha_devolucion y no bloqueado)
+    activos = [
+        r for r in registros
+        if not r.get('fecha_devolucion') and r.get('estado_tarjeta') != 'bloqueado'
+    ]
+
+    if activos:
+        # Tomar el más reciente y marcarlo como devuelto
+        uso_activo = sorted(activos, key=lambda x: x['fecha_asignacion'], reverse=True)[0]
+        try:
+            now = datetime.utcnow().isoformat()
+            tabla.update_item(
+                Key={
+                    'id_tarjeta': uso_activo['id_tarjeta'],
+                    'fecha_asignacion': uso_activo['fecha_asignacion']
+                },
+                UpdateExpression="SET fecha_devolucion = :fd",
+                ExpressionAttributeValues={
+                    ':fd': now
+                }
+            )
+            return JsonResponse({
+                'status': 'ok',
+                'fecha_devolucion': now,
+                'mensaje': 'Tarjeta desvinculada correctamente.',
+                'usuario': uso_activo.get('nombre', 'Desconocido')
+            })
+        except Exception as e:
+            return JsonResponse({'error': f'Error al actualizar: {str(e)}'}, status=500)
+
+    # ⚠️ Si no hay activos, verificar si hay un registro bloqueado
+    bloqueadas = [
+        r for r in registros
+        if not r.get('fecha_devolucion') and r.get('estado_tarjeta') == 'bloqueado'
+    ]
+
+    if bloqueadas:
+        bloqueada = bloqueadas[0]
+        return JsonResponse({
+            'error': 'La tarjeta está bloqueada y no puede ser usada.',
+            'usuario': bloqueada.get('nombre', 'Desconocido')
+        }, status=403)
+
+    # Si no hay activos ni bloqueadas, es porque ya fue devuelta
+    registro_reciente = sorted(registros, key=lambda x: x['fecha_asignacion'], reverse=True)[0]
+
+    return JsonResponse({
+        'status': 'ok',
+        'mensaje': 'La tarjeta ya fue devuelta anteriormente.',
+        'fecha_devolucion': registro_reciente.get('fecha_devolucion'),
+        'usuario': registro_reciente.get('nombre', 'Desconocido')
+    })
 # === Vistas protegidas ===
 
 @login_required_custom
