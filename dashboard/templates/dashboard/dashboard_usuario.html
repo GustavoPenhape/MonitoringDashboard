@@ -44,8 +44,8 @@
         <!-- Formulario oculto inicialmente -->
         <div id="formularioDesvincular" class="col-6 mx-auto mt-4" style="display: none;">
             <div class="card p-4 shadow-sm">
-                <h5 class="mb-3">Ingrese el ID del lector RFID:</h5>
-                <input type="text" id="input-lector-id" class="form-control mb-3" placeholder="ID del lector">
+                <h5 class="mb-3">Ingrese el ID de la tarjeta RFID:</h5>
+                <input type="text" id="input-tarjeta-id" class="form-control mb-3" placeholder="ID de la tarjeta">
                 <button onclick="desvincularRFID()" class="btn btn-outline-danger w-100">
                     Enviar
                 </button>
@@ -60,10 +60,10 @@
         }
 
         function desvincularRFID() {
-            const lectorId = document.getElementById('input-lector-id').value;
+            const tarjetaId = document.getElementById('input-tarjeta-id').value;
 
-            if (!lectorId) {
-                alert('Por favor ingresa un ID de lector.');
+            if (!tarjetaId) {
+                alert('Por favor ingresa un ID de tarjeta.');
                 return;
             }
 
@@ -73,14 +73,15 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ id_tarjeta: lectorId })
+                body: JSON.stringify({ id_tarjeta: tarjetaId })
             })
-            .then(response => {
-                if (response.ok) {
-                    alert('RFID desvinculado correctamente.');
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    alert(`✅ ${data.mensaje}\nUsuario: ${data.usuario}`);
                     location.reload();
-                } else {
-                    alert('Error al desvincular RFID.');
+                } else if (data.error) {
+                    alert(`⚠️ ${data.error}\nUsuario: ${data.usuario || 'Desconocido'}`);
                 }
             })
             .catch(error => {
